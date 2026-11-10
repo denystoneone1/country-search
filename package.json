@@ -1,0 +1,17 @@
+{
+  "name": "country-search",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Live country search with request cancellation for the RS School task",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "vitest": "^5.1.0"
+  }
+}
