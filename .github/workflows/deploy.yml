@@ -21,15 +21,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Версию pnpm берет из поля packageManager в package.json
+      - uses: pnpm/action-setup@v6
+
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
 
-      - run: npm ci
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm test
+      - run: pnpm run build
 
       # На сайт попадают только файлы, которые нужны браузеру
       - name: Collect site files
