@@ -92,3 +92,43 @@ describe('searchCountries', () => {
     await expect(searchCountries('spain', new AbortController().signal)).rejects.toBe(networkError);
   });
 });
+
+describe('searchCountries: no matches and timeout', () => {
+  const TIMEOUT_MS = 20;
+
+  it('resolves with an empty list on 404, because 404 means no matches', async () => {
+    mockFetch(new Response('Country not found', { status: 404 }));
+
+    await expect(searchCountries('zzz', new AbortController().signal)).resolves.toEqual([]);
+  });
+
+  it('rejects with TimeoutError when the server does not answer in time', async () => {
+    const { fetch } = createControlledFetch();
+    vi.stubGlobal('fetch', fetch);
+
+    const result = searchCountries('spain', new AbortController().signal, TIMEOUT_MS);
+
+    await expect(result).rejects.toMatchObject({ name: 'TimeoutError' });
+  });
+
+  it('rejects with AbortError, not TimeoutError, when cancelled before the timeout', async () => {
+    const { fetch } = createControlledFetch();
+    vi.stubGlobal('fetch', fetch);
+    const controller = new AbortController();
+
+    const result = searchCountries('spain', controller.signal, TIMEOUT_MS);
+    controller.abort();
+
+    await expect(result).rejects.toMatchObject({ name: 'AbortError' });
+  });
+
+  it('resolves normally when the answer comes before the timeout', async () => {
+    const { fetch, requests } = createControlledFetch();
+    vi.stubGlobal('fetch', fetch);
+
+    const result = searchCountries('spain', new AbortController().signal, TIMEOUT_MS);
+    requests[0]?.respond(jsonResponse(spainResponse));
+
+    await expect(result).resolves.toEqual(spainResponse);
+  });
+});
