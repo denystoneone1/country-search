@@ -8,14 +8,25 @@ function buildSearchUrl(query: string): string {
   return `${API_URL}/name/${encodeURIComponent(query.trim())}`;
 }
 
-/** Ищет страны по имени. Неуспешный статус ответа превращается в HttpError. */
+/** countries.dev отвечает 404, когда совпадений нет. Это пустой результат, а не ошибка. */
+const NOT_FOUND = 404;
+
+/**
+ * Ищет страны по имени.
+ * Запрос прерывается и по переданному signal (AbortError), и по таймауту (TimeoutError).
+ * 404 дает пустой массив, любой другой неуспешный статус - HttpError.
+ */
 export async function searchCountries(
   query: string,
   signal: AbortSignal,
-  _timeoutMs = SEARCH_TIMEOUT_MS,
+  timeoutMs = SEARCH_TIMEOUT_MS,
 ): Promise<RawCountry[]> {
-  const response = await fetch(buildSearchUrl(query), { signal });
+  const requestSignal = AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]);
+  const response = await fetch(buildSearchUrl(query), { signal: requestSignal });
 
+  if (response.status === NOT_FOUND) {
+    return [];
+  }
   if (!response.ok) {
     throw new HttpError(response.status);
   }
