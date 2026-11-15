@@ -3,9 +3,11 @@ import {
   type SearchFn,
   type SearchState,
 } from './core/search-controller.js';
+import type { SearchHistory } from './core/search-history.js';
 import { createCountryCard } from './ui/country-card.js';
 import { createCountryDetails } from './ui/country-details.js';
 import { h } from './ui/dom.js';
+import { renderHistory } from './ui/history-view.js';
 import { createSearchField } from './ui/search-field.js';
 import { renderStatus } from './ui/status-view.js';
 
@@ -14,14 +16,34 @@ export const SEARCH_DEBOUNCE_MS = 300;
 
 export interface AppOptions {
   search: SearchFn;
+  history: SearchHistory;
 }
 
-export function mountApp(root: HTMLElement, { search }: AppOptions): void {
+export function mountApp(root: HTMLElement, { search, history }: AppOptions): void {
   const details = createCountryDetails();
+  const historyBar = h('nav', { className: 'history', attrs: { 'aria-label': 'История поиска' } });
   const status = h('div', { className: 'app__status', attrs: { 'aria-live': 'polite' } });
   const results = h('ul', { className: 'results', attrs: { 'aria-label': 'Найденные страны' } });
 
+  const renderHistoryBar = (items: string[]): void => {
+    historyBar.replaceChildren(
+      ...renderHistory(items, {
+        onPick: (query) => {
+          searchField.setValue(query);
+          controller.searchNow(query);
+        },
+        onClear: () => {
+          history.clear();
+          renderHistoryBar([]);
+        },
+      }),
+    );
+  };
+
   const render = (state: SearchState): void => {
+    if (state.status === 'results') {
+      renderHistoryBar(history.add(state.query));
+    }
     status.replaceChildren(renderStatus(state, controller.retry));
     results.replaceChildren(
       ...(state.status === 'results'
@@ -47,11 +69,13 @@ export function mountApp(root: HTMLElement, { search }: AppOptions): void {
         }),
       ]),
       searchField.element,
+      historyBar,
       status,
       results,
     ]),
     details.element,
   );
 
+  renderHistoryBar(history.list());
   render(controller.getState());
 }

@@ -352,3 +352,54 @@ button {
     transition: none;
   }
 }
+
+/* История */
+
+.history {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+}
+
+.history:empty {
+  display: none;
+}
+
+.history__title {
+  color: var(--muted);
+}
+
+.history__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history__item {
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.history__item:hover,
+.history__item:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.history__clear {
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
