@@ -1,4 +1,6 @@
+import { classifySearchError } from '../core/classify-search-error.js';
 import type { Country } from '../core/country.js';
+import type { ResolveCountryNames } from '../core/country-names.js';
 import { createFacts, createFlag } from './country-card.js';
 import { h } from './dom.js';
 import { formatArea, formatList, formatNumber, NO_DATA } from './format.js';
@@ -14,7 +16,9 @@ function describeCountry({ name, nativeName, region, subregion, demonym }: Count
   return `${name}${selfName} находится в регионе ${location}. Жители: ${demonym || NO_DATA}.`;
 }
 
-function renderContent(country: Country): HTMLElement[] {
+const NO_BORDERS = 'нет сухопутных границ';
+
+function renderContent(country: Country, borders: HTMLElement): HTMLElement[] {
   return [
     h('header', { className: 'details__header' }, [
       createFlag(country, 'details__flag'),
@@ -34,15 +38,50 @@ function renderContent(country: Country): HTMLElement[] {
         ['Площадь', formatArea(country.area)],
         ['Языки', formatList(country.languages)],
         ['Валюта', formatList(country.currencies)],
-        ['Границы', formatList(country.borders, 'нет сухопутных границ')],
+        ['Границы', borders],
       ],
       'details__facts',
     ),
   ];
 }
 
-/** Детальный вид страны в нативном dialog: фокус, Esc и затемнение фона дает браузер. */
-export function createCountryDetails(): CountryDetails {
+/**
+ * Детальный вид страны в нативном dialog: фокус, Esc и затемнение фона дает браузер.
+ * Соседи сначала показаны кодами, затем названиями. Загрузка названий отменяется,
+ * когда окно закрыли или открыли другую страну.
+ */
+export function createCountryDetails(resolveNames: ResolveCountryNames): CountryDetails {
+  let namesRequest: AbortController | null = null;
+
+  const cancelNamesRequest = (): void => {
+    namesRequest?.abort();
+    namesRequest = null;
+  };
+
+  const loadBorderNames = async (codes: string[], target: HTMLElement): Promise<void> => {
+    cancelNamesRequest();
+    if (codes.length === 0) {
+      return;
+    }
+    const request = new AbortController();
+    namesRequest = request;
+    target.setAttribute('aria-busy', 'true');
+
+    try {
+      target.textContent = formatList(await resolveNames(codes, request.signal));
+    } catch (error) {
+      // Отмена значит, что окно уже закрыто или показывает другую страну: коды остаются как есть
+      if (classifySearchError(error).kind !== 'aborted') {
+        target.textContent = formatList(codes);
+      }
+    } finally {
+      target.removeAttribute('aria-busy');
+      if (namesRequest === request) {
+        namesRequest = null;
+      }
+    }
+  };
+
   const content = h('div', { className: 'details__content' });
   const closeButton = h('button', {
     className: 'details__close',
@@ -55,6 +94,7 @@ export function createCountryDetails(): CountryDetails {
     [closeButton, content],
   );
 
+  dialog.addEventListener('close', cancelNamesRequest);
   closeButton.addEventListener('click', () => {
     dialog.close();
   });
@@ -68,8 +108,10 @@ export function createCountryDetails(): CountryDetails {
   return {
     element: dialog,
     open: (country) => {
-      content.replaceChildren(...renderContent(country));
+      const borders = h('span', { text: formatList(country.borders, NO_BORDERS) });
+      content.replaceChildren(...renderContent(country, borders));
       dialog.showModal();
+      void loadBorderNames(country.borders, borders);
     },
   };
 }

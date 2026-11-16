@@ -1,5 +1,6 @@
 import { mountApp } from './app.js';
 import { createCachedSearch } from './core/cached-search.js';
+import { createCountryNameResolver, fetchCountryByCode } from './core/country-names.js';
 import { searchCountries } from './core/search-countries.js';
 import { createSearchHistory, type HistoryStorage } from './core/search-history.js';
 
@@ -14,5 +15,6 @@ function getLocalStorage(): HistoryStorage {
 
 mountApp(document.body, {
   search: createCachedSearch(searchCountries),
+  resolveNames: createCountryNameResolver(fetchCountryByCode),
   history: createSearchHistory(getLocalStorage()),
 });

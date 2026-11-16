@@ -2,7 +2,7 @@ import type { Country } from '../core/country.js';
 import { h } from './dom.js';
 import { formatNumber, NO_DATA } from './format.js';
 
-export type Fact = [term: string, value: string];
+export type Fact = [term: string, value: string | Node];
 
 export function createFlag(country: Country, className: string): HTMLImageElement {
   return h('img', {
@@ -23,7 +23,7 @@ export function createFacts(facts: Fact[], className: string): HTMLDListElement 
     facts.map(([term, value]) =>
       h('div', { className: `${className}-row` }, [
         h('dt', { text: term }),
-        h('dd', { text: value }),
+        typeof value === 'string' ? h('dd', { text: value }) : h('dd', {}, [value]),
       ]),
     ),
   );

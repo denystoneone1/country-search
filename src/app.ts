@@ -3,6 +3,7 @@ import {
   type SearchFn,
   type SearchState,
 } from './core/search-controller.js';
+import type { ResolveCountryNames } from './core/country-names.js';
 import type { SearchHistory } from './core/search-history.js';
 import { createCountryCard } from './ui/country-card.js';
 import { createCountryDetails } from './ui/country-details.js';
@@ -16,11 +17,12 @@ export const SEARCH_DEBOUNCE_MS = 300;
 
 export interface AppOptions {
   search: SearchFn;
+  resolveNames: ResolveCountryNames;
   history: SearchHistory;
 }
 
-export function mountApp(root: HTMLElement, { search, history }: AppOptions): void {
-  const details = createCountryDetails();
+export function mountApp(root: HTMLElement, { search, resolveNames, history }: AppOptions): void {
+  const details = createCountryDetails(resolveNames);
   const historyBar = h('nav', { className: 'history', attrs: { 'aria-label': 'История поиска' } });
   const status = h('div', { className: 'app__status', attrs: { 'aria-live': 'polite' } });
   const results = h('ul', { className: 'results', attrs: { 'aria-label': 'Найденные страны' } });
