@@ -35,12 +35,26 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Место под полосу прокрутки резервируется всегда, поэтому при ее скрытии верстка не прыгает */
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
   background: var(--bg);
   color: var(--ink);
   font: 16px/1.5 var(--font-body);
+}
+
+/* Пока открыт детальный вид, страница под ним не прокручивается (класс ставит src/ui/scroll-lock.ts) */
+body.is-scroll-locked {
+  position: fixed;
+  top: var(--scroll-lock-top, 0);
+  right: 0;
+  left: 0;
+  overflow: hidden;
 }
 
 button {
@@ -288,6 +302,8 @@ button {
   background: var(--surface);
   color: var(--ink);
   box-shadow: var(--shadow);
+  /* Прокрутка внутри окна у края не перескакивает на страницу */
+  overscroll-behavior: contain;
 }
 
 .details::backdrop {

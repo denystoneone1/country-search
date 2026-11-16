@@ -4,6 +4,7 @@ import type { ResolveCountryNames } from '../core/country-names.js';
 import { createFacts, createFlag } from './country-card.js';
 import { h } from './dom.js';
 import { formatArea, formatList, formatNumber, NO_DATA } from './format.js';
+import { lockPageScroll } from './scroll-lock.js';
 
 export interface CountryDetails {
   element: HTMLDialogElement;
@@ -52,6 +53,7 @@ function renderContent(country: Country, borders: HTMLElement): HTMLElement[] {
  */
 export function createCountryDetails(resolveNames: ResolveCountryNames): CountryDetails {
   let namesRequest: AbortController | null = null;
+  let unlockPageScroll: (() => void) | null = null;
 
   const cancelNamesRequest = (): void => {
     namesRequest?.abort();
@@ -94,7 +96,11 @@ export function createCountryDetails(resolveNames: ResolveCountryNames): Country
     [closeButton, content],
   );
 
-  dialog.addEventListener('close', cancelNamesRequest);
+  dialog.addEventListener('close', () => {
+    cancelNamesRequest();
+    unlockPageScroll?.();
+    unlockPageScroll = null;
+  });
   closeButton.addEventListener('click', () => {
     dialog.close();
   });
@@ -110,6 +116,7 @@ export function createCountryDetails(resolveNames: ResolveCountryNames): Country
     open: (country) => {
       const borders = h('span', { text: formatList(country.borders, NO_BORDERS) });
       content.replaceChildren(...renderContent(country, borders));
+      unlockPageScroll ??= lockPageScroll();
       dialog.showModal();
       void loadBorderNames(country.borders, borders);
     },
