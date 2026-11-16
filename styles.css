@@ -1,0 +1,421 @@
+:root {
+  --bg: #f4f1ea;
+  --surface: #fffdf8;
+  --ink: #1d2a33;
+  --muted: #5b6770;
+  --line: #ddd6c8;
+  --accent: #1f6f78;
+  --accent-ink: #ffffff;
+  --danger: #a33a2c;
+  --danger-bg: #fbeae6;
+  --shadow: 0 1px 2px rgb(29 42 51 / 6%), 0 8px 24px rgb(29 42 51 / 8%);
+  --radius: 14px;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12181d;
+    --surface: #1b242b;
+    --ink: #e8e4da;
+    --muted: #9aa5ad;
+    --line: #2c3740;
+    --accent: #5fb3bb;
+    --accent-ink: #0d1417;
+    --danger: #f08b7b;
+    --danger-bg: #3a201c;
+    --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 8px 24px rgb(0 0 0 / 25%);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Место под полосу прокрутки резервируется всегда, поэтому при ее скрытии верстка не прыгает */
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 var(--font-body);
+}
+
+/* Пока открыт детальный вид, страница под ним не прокручивается (класс ставит src/ui/scroll-lock.ts) */
+body.is-scroll-locked {
+  position: fixed;
+  top: var(--scroll-lock-top, 0);
+  right: 0;
+  left: 0;
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.app {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  padding: 48px 16px 64px;
+}
+
+.app__header {
+  margin-bottom: 28px;
+}
+
+.app__title {
+  margin: 0;
+  font: 600 clamp(2.2rem, 6vw, 3.4rem) / 1.05 var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.app__subtitle {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+/* Поиск */
+
+.search {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.search__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.search__input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.125rem;
+  box-shadow: var(--shadow);
+}
+
+.search__input:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-color: var(--accent);
+}
+
+/* Состояния */
+
+.app__status {
+  min-height: 28px;
+  margin-bottom: 16px;
+}
+
+.status {
+  margin: 0;
+  color: var(--muted);
+}
+
+.status p {
+  margin: 0;
+}
+
+.status__title {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.status--loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.status--empty {
+  display: grid;
+  gap: 4px;
+  padding: 24px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.status--error {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 16px 20px;
+  border-left: 4px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--danger-bg);
+}
+
+.status--error .status__title {
+  color: var(--danger);
+}
+
+.button {
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+/* Карточки */
+
+.results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.card:hover,
+.card:focus-within {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.card__flag {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-bottom: 1px solid var(--line);
+  background: var(--line);
+}
+
+.card__name {
+  margin: 14px 16px 8px;
+  font: 600 1.25rem/1.2 var(--font-display);
+}
+
+.card__open {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Кнопка растянута на всю карточку: кликается любое место */
+.card__open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.card__open:focus-visible {
+  outline: none;
+}
+
+.card:has(.card__open:focus-visible) {
+  outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.card__facts,
+.details__facts {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.card__facts {
+  padding: 0 16px 16px;
+  font-size: 0.9375rem;
+}
+
+.card__facts-row,
+.details__facts-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card__facts dt,
+.details__facts dt {
+  color: var(--muted);
+}
+
+.card__facts dd,
+.details__facts dd {
+  margin: 0;
+  text-align: right;
+}
+
+/* Детальный вид */
+
+.details {
+  width: min(560px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  /* Прокрутка внутри окна у края не перескакивает на страницу */
+  overscroll-behavior: contain;
+}
+
+.details::backdrop {
+  background: rgb(10 16 20 / 55%);
+}
+
+.details__content {
+  padding: 24px;
+}
+
+.details__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--bg);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.details__header {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.details__flag {
+  width: 120px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.details__title {
+  margin: 0 40px 6px 0;
+  font: 600 1.75rem/1.15 var(--font-display);
+}
+
+.details__description {
+  margin: 0;
+  color: var(--muted);
+}
+
+.details__facts {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.details__facts-row {
+  padding: 6px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+
+  .card {
+    transition: none;
+  }
+}
+
+/* История */
+
+.history {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+}
+
+.history:empty {
+  display: none;
+}
+
+.history__title {
+  color: var(--muted);
+}
+
+.history__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history__item {
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.history__item:hover,
+.history__item:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.history__clear {
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
