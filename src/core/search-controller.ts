@@ -9,6 +9,9 @@ export type ErrorFailure = Exclude<SearchFailure, { kind: 'aborted' }>;
 
 export type SearchState =
   | { status: 'idle' }
+  /** Текст введен, но debounce еще не отправил запрос */
+  | { status: 'pending'; query: string }
+  /** Запрос отправлен и ждет ответа */
   | { status: 'loading'; query: string }
   | { status: 'results'; query: string; countries: Country[] }
   | { status: 'empty'; query: string }
@@ -21,7 +24,10 @@ export interface SearchControllerOptions {
 }
 
 export interface SearchController {
-  /** Изменение текста в поле: отменяет активный запрос сразу, новый уходит после debounce. */
+  /**
+   * Изменение текста в поле: отменяет активный запрос сразу и переводит в pending,
+   * новый запрос уходит после debounce.
+   */
   input: (text: string) => void;
   /** Повторяет последний введенный запрос без ожидания debounce. */
   retry: () => void;
@@ -96,7 +102,7 @@ export function createSearchController({
       return;
     }
 
-    setState({ status: 'loading', query });
+    setState({ status: 'pending', query });
     debouncedRun(query);
   };
 

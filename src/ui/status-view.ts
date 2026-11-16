@@ -52,6 +52,9 @@ export function renderStatus(state: SearchState, onRetry: () => void): HTMLEleme
         className: 'status status--idle',
         text: 'Начните вводить название страны на английском.',
       });
+    case 'pending':
+      // Пока идет ввод, запрос еще не отправлен: старые карточки уже убраны, спиннера еще нет
+      return h('p', { className: 'status status--pending' });
     case 'loading':
       return renderLoading(state.query);
     case 'empty':
