@@ -4,6 +4,7 @@ import {
   type SearchState,
 } from './core/search-controller.js';
 import type { ResolveCountryNames } from './core/country-names.js';
+import { debounce } from './core/debounce.js';
 import type { SearchHistory } from './core/search-history.js';
 import { createCountryCard } from './ui/country-card.js';
 import { createCountryDetails } from './ui/country-details.js';
@@ -14,6 +15,12 @@ import { renderStatus } from './ui/status-view.js';
 
 /** Задержка между последним нажатием клавиши и запросом. Обоснование - в DESIGN.md. */
 export const SEARCH_DEBOUNCE_MS = 300;
+
+/**
+ * Сколько результат должен провисеть без нового ввода, чтобы запрос попал в историю.
+ * Так в историю не попадают части слова, по которым случайно нашлись страны при наборе.
+ */
+export const HISTORY_SETTLE_MS = 1500;
 
 export interface AppOptions {
   search: SearchFn;
@@ -42,14 +49,29 @@ export function mountApp(root: HTMLElement, { search, resolveNames, history }: A
     );
   };
 
+  const remember = (query: string): void => {
+    renderHistoryBar(history.add(query));
+  };
+  const rememberWhenSettled = debounce(remember, HISTORY_SETTLE_MS);
+
   const render = (state: SearchState): void => {
     if (state.status === 'results') {
-      renderHistoryBar(history.add(state.query));
+      rememberWhenSettled(state.query);
+    } else {
+      rememberWhenSettled.cancel();
     }
+
     status.replaceChildren(renderStatus(state, controller.retry));
     results.replaceChildren(
       ...(state.status === 'results'
-        ? state.countries.map((country) => createCountryCard(country, details.open))
+        ? state.countries.map((country) =>
+            createCountryCard(country, (opened) => {
+              // Открытая карточка - явный знак, что запрос нужный: сохраняем без ожидания
+              rememberWhenSettled.cancel();
+              remember(state.query);
+              details.open(opened);
+            }),
+          )
         : []),
     );
   };
