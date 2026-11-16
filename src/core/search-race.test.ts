@@ -70,6 +70,6 @@ describe('search race of stale responses', () => {
 
     expect(requests[0]?.signal.aborted).toBe(true);
     expect(states.flatMap(resultNames)).not.toContain('Antarctica');
-    expect(controller.getState()).toEqual({ status: 'loading', query: 'spain' });
+    expect(controller.getState()).toEqual({ status: 'pending', query: 'spain' });
   });
 });

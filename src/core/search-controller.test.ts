@@ -66,17 +66,33 @@ describe('createSearchController', () => {
     expect(controller.getState()).toEqual({ status: 'idle' });
   });
 
-  it('shows loading right away and searches only after the debounce delay', () => {
+  it('waits in the pending state during debounce without sending a request', () => {
     const { controller, search } = setup();
 
     controller.input('spain');
 
-    expect(controller.getState()).toEqual({ status: 'loading', query: 'spain' });
+    expect(controller.getState()).toEqual({ status: 'pending', query: 'spain' });
     expect(search).not.toHaveBeenCalled();
+  });
 
+  it('shows loading only once the request is sent after the debounce delay', () => {
+    const { controller, search } = setup();
+
+    controller.input('spain');
     vi.advanceTimersByTime(DELAY);
 
     expect(search).toHaveBeenCalledExactlyOnceWith('spain', expect.any(AbortSignal));
+    expect(controller.getState()).toEqual({ status: 'loading', query: 'spain' });
+  });
+
+  it('leaves loading for pending when new input aborts the request in flight', () => {
+    const { controller } = setup();
+
+    controller.input('sp');
+    vi.advanceTimersByTime(DELAY);
+    controller.input('spain');
+
+    expect(controller.getState()).toEqual({ status: 'pending', query: 'spain' });
   });
 
   it('sends one request for fast typing', () => {
