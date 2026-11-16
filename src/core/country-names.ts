@@ -1,3 +1,4 @@
+import { abortError } from './abort-error.js';
 import type { RawCountry } from './country.js';
 import { HttpError } from './http-error.js';
 import { requestApi, SEARCH_TIMEOUT_MS } from './search-countries.js';
@@ -19,12 +20,6 @@ export async function fetchCountryByCode(
   }
 
   return (await response.json()) as RawCountry;
-}
-
-function abortError(signal: AbortSignal): Error {
-  return signal.reason instanceof Error
-    ? signal.reason
-    : new DOMException('The operation was aborted.', 'AbortError');
 }
 
 /**

@@ -1,3 +1,4 @@
+import { abortError } from './abort-error.js';
 import type { RawCountry } from './country.js';
 import type { SearchFn } from './search-controller.js';
 
@@ -16,12 +17,6 @@ interface InFlightRequest {
 
 function toCacheKey(query: string): string {
   return query.trim().toLowerCase();
-}
-
-function abortError(signal: AbortSignal): Error {
-  return signal.reason instanceof Error
-    ? signal.reason
-    : new DOMException('The operation was aborted.', 'AbortError');
 }
 
 /**
